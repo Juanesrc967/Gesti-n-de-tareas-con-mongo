@@ -22,35 +22,37 @@ export function TaskFormPage() {
   } = useForm();
 
   const onSubmit = async (data) => {
+    if (!data.title || !data.description || !data.date) {
+      setErrorMessage("Todos los campos son obligatorios.");
+      return;
+    }
+
+    if (params.id) {
+      console.log("Actualizando tarea con ID:", params.id); // Verificar el ID
+    }
+
     try {
-      // Verificamos si estamos actualizando o creando
       if (params.id) {
         await updateTask(params.id, {
           ...data,
           date: dayjs.utc(data.date).format(),
         });
         setSuccessMessage("Tarea actualizada correctamente.");
-        setErrorMessage(""); // Limpiar cualquier error previo
       } else {
         await createTask({
           ...data,
           date: dayjs.utc(data.date).format(),
         });
         setSuccessMessage("Tarea creada correctamente.");
-        setErrorMessage(""); // Limpiar cualquier error previo
       }
-
-      // Limpiar el mensaje de éxito después de 5 segundos
-      setTimeout(() => setSuccessMessage(""), 5000);
-
-      // Redirigir a la lista de tareas después de 3 segundos para ver el resultado
       setTimeout(() => navigate("/tasks"), 3000);
     } catch (error) {
-      console.error(error);
-      setSuccessMessage(""); // Limpiar cualquier mensaje de éxito previo
+      console.error("Error en la actualización:", error);
       setErrorMessage("Hubo un error al actualizar la tarea.");
     }
   };
+
+
 
   useEffect(() => {
     const loadTask = async () => {
@@ -96,13 +98,21 @@ export function TaskFormPage() {
         <Input type="date" name="date" {...register("date")} />
 
         <div className="flex justify-between mt-4">
-          <Button type="submit">Save</Button>
+
+          <Button type="submit">Guardar</Button>
+
           <Button
-            type="button" onClick={() => navigate("/tasks")}
+            type="button"
+            onClick={() => {
+              if (window.confirm("¿Estás seguro de que deseas salir sin guardar los cambios?")) {
+                navigate("/tasks");
+              }
+            }}
             className="ml-2 bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
           >
             Volver
           </Button>
+
         </div>
 
         {/* Mensaje de éxito */}
