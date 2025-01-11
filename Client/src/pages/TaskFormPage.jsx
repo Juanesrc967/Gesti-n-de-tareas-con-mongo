@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -12,6 +12,8 @@ export function TaskFormPage() {
   const { createTask, getTask, updateTask } = useTasks();
   const navigate = useNavigate();
   const params = useParams();
+  const [successMessage, setSuccessMessage] = useState(""); // Estado para mensaje de éxito
+  const [errorMessage, setErrorMessage] = useState(""); // Estado para mensaje de error
   const {
     register,
     setValue,
@@ -21,22 +23,32 @@ export function TaskFormPage() {
 
   const onSubmit = async (data) => {
     try {
+      // Verificamos si estamos actualizando o creando
       if (params.id) {
-        updateTask(params.id, {
+        await updateTask(params.id, {
           ...data,
           date: dayjs.utc(data.date).format(),
         });
+        setSuccessMessage("Tarea actualizada correctamente.");
+        setErrorMessage(""); // Limpiar cualquier error previo
       } else {
-        createTask({
+        await createTask({
           ...data,
           date: dayjs.utc(data.date).format(),
         });
+        setSuccessMessage("Tarea creada correctamente.");
+        setErrorMessage(""); // Limpiar cualquier error previo
       }
 
-      // navigate("/tasks");
+      // Limpiar el mensaje de éxito después de 5 segundos
+      setTimeout(() => setSuccessMessage(""), 5000);
+
+      // Redirigir a la lista de tareas después de 3 segundos para ver el resultado
+      setTimeout(() => navigate("/tasks"), 3000);
     } catch (error) {
-      console.log(error);
-      // window.location.href = "/";
+      console.error(error);
+      setSuccessMessage(""); // Limpiar cualquier mensaje de éxito previo
+      setErrorMessage("Hubo un error al actualizar la tarea.");
     }
   };
 
@@ -54,7 +66,7 @@ export function TaskFormPage() {
       }
     };
     loadTask();
-  }, []);
+  }, [params.id, setValue]);
 
   return (
     <Card>
@@ -82,7 +94,26 @@ export function TaskFormPage() {
 
         <Label htmlFor="date">Date</Label>
         <Input type="date" name="date" {...register("date")} />
-        <Button>Save</Button>
+
+        <div className="flex justify-between mt-4">
+          <Button type="submit">Save</Button>
+          <Button
+            type="button" onClick={() => navigate("/tasks")}
+            className="ml-2 bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+          >
+            Volver
+          </Button>
+        </div>
+
+        {/* Mensaje de éxito */}
+        {successMessage && (
+          <p className="text-green-500 text-xs italic mt-4">{successMessage}</p>
+        )}
+
+        {/* Mensaje de error */}
+        {errorMessage && (
+          <p className="text-red-500 text-xs italic mt-4">{errorMessage}</p>
+        )}
       </form>
     </Card>
   );

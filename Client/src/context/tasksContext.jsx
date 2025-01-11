@@ -35,6 +35,7 @@ export function TaskProvider({ children }) {
   const createTask = async (task) => {
     try {
       const res = await createTaskRequest(task);
+      setTasks((prevTasks) => [...prevTasks, res.data]);
       console.log(res.data);
     } catch (error) {
       console.log(error);
@@ -52,9 +53,16 @@ export function TaskProvider({ children }) {
 
   const updateTask = async (id, task) => {
     try {
-      await updateTaskRequest(id, task);
+      const res = await updateTaskRequest(id, task);
+      if (res.status === 200) {
+        setTasks((prevTasks) =>
+          prevTasks.map((t) => (t._id === id ? res.data : t))
+        );
+        alert("Tarea actualizada correctamente");
+      }
     } catch (error) {
       console.error(error);
+      alert("Hubo un error al actualizar la tarea.");
     }
   };
 
